@@ -10,7 +10,7 @@
 
 ;;; Commentary:
 
-;; This package parses your emacs init file for use-package or
+;; This package parses your Emacs init file for use-package or
 ;; global-set-key calls and summarizes the bindings it detects on a
 ;; package by package basis.
 ;;
@@ -23,11 +23,12 @@
   :group 'emacs)
 
 (defcustom remind-bindings-initfile nil
-  "The emacs init file with your bindings in it."
+  "The Emacs init file with your bindings in it."
   :type 'string)
 
 (defun remind-bindings-nextusepackage ()
-  "Get the name and parenthesis bounds of the next use-package"
+  "Get the name and parenthesis bounds of the next ‘use-package’."
+  (interactive)
   (search-forward "(use-package")
   (beginning-of-line)
   (let* ((bound (show-paren--default))
@@ -45,7 +46,8 @@
         `(,name ,inner ,outer)))))
 
 (defun remind-bindings-nextglobalkeybind ()
-  "Get the binding and name of the next global-set-key"
+  "Get the binding and name of the next ‘global-set-key’."
+  (interactive)
   (search-forward "(global-set-key ") ;; throw error if no more
   (beginning-of-line) ;; get the total bounds
   (let* ((bound (show-paren--default))
@@ -79,30 +81,31 @@
          (end-of-line))))))
 
 (defun remind-bindings-getglobal ()
-  "Process entire emacs init.el for global bindings"
+  "Process entire Emacs init.el for global bindings."
+  (interactive)
   (with-current-buffer remind-bindings-initfile
     (save-excursion
       (goto-char 0)
-      (let ((globbers '())
+      (let ((globbers nil)
             (stop nil))
-        (while (not stop)
-          (condition-case err
+        (condition-case err
+            (while (not stop)
               (let ((glob (remind-bindings-nextglobalkeybind)))
                 (when glob
-                  (let ((pname (nth 0 glob))
-                        (bindr (nth 1 glob)))
-                    (unless (assoc pname globbers)
-                      ;; Package name not in the list, add
-                      (add-to-list 'globbers `'(,pname)))
-                    ;; add bindings to list
-                    `(nconc (cdr (assoc ,pname globbers)) '(,bindr))))))
-            (error
-             (setq stop t)))
-          (end-of-line))
-        globbers)))
+                  ;; Ideally we would populate globbers
+                  ;; in an alist fashion, but for now
+                  ;; let's just collect pairs and process
+                  ;; them later...
+                  `(add-to-list globbers '(,glob))))
+              (end-of-line))
+          (error
+           (end-of-line)
+           (setq stop t)))
+        globbers))))
 
 (defun remind-bindings-fromfunc-getpackagename (fname)
-  "Get the name of the package the FUNCTION belongs to. Returns nil if none found."
+  "Get the name of the package the FNAME belongs to.  Return nil if none found."
+  (interactive)
   (let ((packname (symbol-file (intern fname))))
     (when packname
       (let* ((bnamext (car (last (split-string packname "/")))))
@@ -110,7 +113,8 @@
         (car (split-string bnamext "\\."))))))
 
 (defun remind-bindings-bindsinpackage (packinfo)
-  "Return the name and bindings for the current package named and bounded by PACKINFO"
+  "Return the name and bindings for the current package named and bounded by PACKINFO."
+  (interactive)
   (let ((name (nth 0 packinfo))
         (inner (nth 1 packinfo))
         (outer (nth 2 packinfo))
@@ -132,7 +136,8 @@
         `(,name . (,bindlist))))))
 
 (defun remind-bindings-getusepackages ()
-  "Process entire emacs init.el for package bindings"
+  "Process entire Emacs init.el for package bindings."
+  (interactive)
   (with-current-buffer remind-bindings-initfile
     (save-excursion
       (goto-char 0)
@@ -153,7 +158,8 @@
         packbinds))))
 
 (defun remind-bindings-makequotes (alist)
-  "Convert an alist of bindings into a single string list"
+  "Convert an ALIST of bindings into a single string list."
+  (interactive)
   (let ((total))
     (dolist (pbind alist total)
       (let ((packname (car pbind))
