@@ -1,4 +1,4 @@
-;;; omni-quotes-rememberbindings.el --- Get reminders of your bindings -*- lexical-binding: t; -*-
+;;; remind-bindings.el --- Reminders for your init bindings -*- lexical-binding: t; -*-
 
 ;; Copright (C) 2020 Mehmet Tekman <mtekman89@gmail.com>
 
@@ -17,7 +17,16 @@
 ;; The package makes use of the omni-quotes package to give you
 ;; a small reminder during idle periods.
 
-(defun next-usepackage-name-and-bounds ()
+;;; Code:
+(defgroup remind-bindings nil
+  "Group for remembering bindings."
+  :group 'emacs)
+
+(defcustom remind-bindings-initfile nil
+  "The emacs init file with your bindings in it."
+  :type 'string)
+
+(defun remind-bindings-nextusepackage ()
   "Get the name and parenthesis bounds of the next use-package"
   (search-forward "(use-package")
   (beginning-of-line)
@@ -35,7 +44,7 @@
         (goto-char outer)
         `(,name ,inner ,outer)))))
 
-(defun next-globalkeybind ()
+(defun remind-bindings-nextglobalkeybind ()
   "Get the binding and name of the next global-set-key"
   (search-forward "(global-set-key ") ;; throw error if no more
   (beginning-of-line) ;; get the total bounds
@@ -61,7 +70,7 @@
                  (let* ((func
                          (buffer-substring-no-properties
                           (point) (- last 1)))
-                        (package-name (get-package-from-function-name func)))
+                        (package-name (remind-bindings-fromfunc-getpackagename func)))
                    (end-of-line)
                    (let ((bname (format "%s → %s" keyb func)))
                      `(,package-name ,bname))))
@@ -69,7 +78,30 @@
          ;; Move to end of line and give nil
          (end-of-line))))))
 
-(defun get-package-from-function-name (fname)
+(defun remind-bindings-getglobal ()
+  "Process entire emacs init.el for global bindings"
+  (with-current-buffer remind-bindings-initfile
+    (save-excursion
+      (goto-char 0)
+      (let ((globbers '())
+            (stop nil))
+        (while (not stop)
+          (condition-case err
+              (let ((glob (remind-bindings-nextglobalkeybind)))
+                (when glob
+                  (let ((pname (nth 0 glob))
+                        (bindr (nth 1 glob)))
+                    (unless (assoc pname globbers)
+                      ;; Package name not in the list, add
+                      (add-to-list 'globbers `'(,pname)))
+                    ;; add bindings to list
+                    `(nconc (cdr (assoc ,pname globbers)) '(,bindr))))))
+            (error
+             (setq stop t)))
+          (end-of-line))
+        globbers)))
+
+(defun remind-bindings-fromfunc-getpackagename (fname)
   "Get the name of the package the FUNCTION belongs to. Returns nil if none found."
   (let ((packname (symbol-file (intern fname))))
     (when packname
@@ -77,8 +109,7 @@
         ;; name without extension
         (car (split-string bnamext "\\."))))))
 
-
-(defun get-binds-in-packagename (packinfo)
+(defun remind-bindings-bindsinpackage (packinfo)
   "Return the name and bindings for the current package named and bounded by PACKINFO"
   (let ((name (nth 0 packinfo))
         (inner (nth 1 packinfo))
@@ -100,18 +131,18 @@
                 (add-to-list 'bindlist psnickle t)))))
         `(,name . (,bindlist))))))
 
-(defun buffer-package-binds ()
+(defun remind-bindings-getusepackages ()
   "Process entire emacs init.el for package bindings"
-  (with-current-buffer "init.el"
+  (with-current-buffer remind-bindings-initfile
     (save-excursion
       (goto-char 0)
       (let ((packbinds nil)
             (stop nil))
         (while (not stop)
           (condition-case err
-              (let ((packinfo (next-usepackage-name-and-bounds)))
+              (let ((packinfo (remind-bindings-nextusepackage)))
                 (when (nth 1 packinfo) ;; has bounds
-                  (let ((binds (get-binds-in-packagename packinfo)))
+                  (let ((binds (remind-bindings-bindsinpackage packinfo)))
                     (message (car binds))
                     (when (nth 1 binds)
                       (add-to-list 'packbinds binds t)))))
@@ -121,32 +152,7 @@
           (end-of-line))
         packbinds))))
 
-
-(defun buffer-global-binds ()
-  "Process entire emacs init.el for global bindings"
-  (with-current-buffer "init.el"
-    (save-excursion
-      (goto-char 0)
-      (let ((globbers '())
-            (stop nil))
-        (while (not stop)
-          (condition-case err
-              (let ((glob (next-globalkeybind)))
-                (when glob
-                  (let ((pname (nth 0 glob))
-                        (bindr (nth 1 glob)))
-                    (unless (assoc pname globbers)
-                      ;; Package name not in the list, add
-                      (add-to-list 'globbers `'(,pname)))
-                    ;; add bindings to list
-                    `(nconc (cdr (assoc ,pname globbers)) '(,bindr))))))
-            (error
-             (setq stop t)))
-          (end-of-line))
-        globbers)))
-
-
-(defun make-quotes (alist)
+(defun remind-bindings-makequotes (alist)
   "Convert an alist of bindings into a single string list"
   (let ((total))
     (dolist (pbind alist total)
@@ -156,3 +162,6 @@
                            packname
                            (mapconcat 'identity bindings "\t"))))
           (setq total (cons fmt total)))))))
+
+(provide 'remind-bindings)
+;;; remind-bindings.el ends here
