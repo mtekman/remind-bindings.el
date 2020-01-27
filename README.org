@@ -1,36 +1,36 @@
 #+TITLE: remind-bindings.el
 
-* Motivation and Description
+** Motivation and Description
 
-It is sometimes hard to remember what bindings you have set without having to open up your emacs *init* file and checking yourself. 
+ It is sometimes hard to remember what bindings you have set without having to open up your emacs *init* file and checking yourself. 
 
-This package parses your Emacs init file for `use-package` or `global-set-key` calls and summarises the bindings it detects on a package-by-package basis. 
+ This package parses your Emacs init file for `use-package` or `global-set-key` calls and summarises the bindings it detects on a package-by-package basis. 
 
-When emacs is idle, a message is printed in the minibuffer utilising the same framework as [`omni-quotes.el`](https://github.com/AdrieanKhisbe/omni-quotes.el).
+ When emacs is idle, a message is printed in the minibuffer utilising the same framework as [`omni-quotes.el`](https://github.com/AdrieanKhisbe/omni-quotes.el).
 
-* Installation
+** Installation
 
-  #+begin_src elisp
-    (use-package remind-bindings
-      :after-hook 'init
-      :custom
-      (remind-bindings-initfile (expand-file-name "~/.emacs.d/init.el")))
-  #+end_src
+   #+begin_src elisp
+     (use-package remind-bindings
+       :after-hook 'init
+       :custom
+       (remind-bindings-initfile (expand-file-name "~/.emacs.d/init.el")))
+   #+end_src
 
-* Customization
+** Customization
 
-The default format in which shortcuts are displayed is:
+ The default format in which shortcuts are displayed is:
 
-#+begin_src shell
-[packagename] key1 → func1 | key2 → func2 | key3 → func3
-#+end_src
+ #+begin_src shell
+ [packagename] key1 → func1 | key2 → func2 | key3 → func3
+ #+end_src
 
 
-All text separators and decoration can be customised by modifying:
+ All text separators and decoration can be customised by modifying:
 
-#+begin_src elisp
-  (setq remind-bindings--format-packbincom "[%s] %s")
-  (setq remind-bindings--format-bincom "%s → %s")
-  (setq remind-bindings--format-bindingsep " | ")
-#+end_src
+ #+begin_src elisp
+   (setq remind-bindings--format-packbincom "[%s] %s")
+   (setq remind-bindings--format-bincom "%s → %s")
+   (setq remind-bindings--format-bindingsep " | ")
+ #+end_src
 
