@@ -3,7 +3,7 @@
 # NOTE: HTML for the GitHub renderer, courtesy of alphapapa for the template.
 #+HTML: <a href="https://melpa.org/#/remind-bindings"><img src="https://melpa.org/packages/remind-bindings-badge.svg"></a> <a href="https://stable.melpa.org/#/remind-bindings"><img src="https://stable.melpa.org/packages/remind-bindings-badge.svg"></a>
 
- It is sometimes hard to remember what bindings you have set without having to open up your emacs *init* file and checking yourself.
+ It is sometimes hard to remember what bindings you have set without having to open up your =init= file and checking yourself.
 
  This package parses your Emacs init file for =use-package= or =global-set-key= calls and summarises the bindings it detects on a package-by-package basis.
 
