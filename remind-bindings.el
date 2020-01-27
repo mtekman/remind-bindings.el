@@ -28,9 +28,6 @@
   "Group for formatting how the reminders are displayed"
   :group 'remind-bindings)
 
-(defvar remind-bindings--quoteslist nil
-  "List of string to prompt users during idle times.")
-
 (defcustom remind-bindings-initfile nil
   "The Emacs init file with your bindings in it."
   :type 'string
@@ -51,6 +48,7 @@
   :type 'string
   :group 'remind-bindings-format)
 
+
 (defun remind-bindings-nextusepackage ()
   "Get the name and parenthesis bounds of the next ‘use-package’."
   (search-forward "(use-package")
@@ -68,6 +66,7 @@
              (name (buffer-substring-no-properties beg end)))
         (goto-char outer)
         `(,name ,inner ,outer)))))
+
 
 (defun remind-bindings-nextglobalkeybind ()
   "Get the binding and name of the next ‘global-set-key’."
@@ -104,6 +103,7 @@
          ;; Move to end of line and give nil
          (end-of-line))))))
 
+
 (defun remind-bindings-getglobal ()
   "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
   (with-current-buffer remind-bindings-initfile
@@ -130,6 +130,7 @@
            (setq stop t)))
         (map-into globbers 'hash-table)))))
 
+
 (defun remind-bindings-fromfunc-getpackagename (fname)
   "Get the name of the package the FNAME belongs to.  Return nil if none found."
   (let ((packname (symbol-file (intern fname))))
@@ -137,6 +138,7 @@
       (let* ((bnamext (car (last (split-string packname "/")))))
         ;; name without extension
         (car (split-string bnamext "\\."))))))
+
 
 (defun remind-bindings-bindsinpackage (packinfo)
   "Return the name and bindings for the current package named and bounded by PACKINFO."
@@ -152,12 +154,12 @@
             (let* ((end (- (point) 1))
                    (sta (+ (search-backward "(") 1))
                    (juststr (buffer-substring-no-properties sta end))
-                   (bin-comm (split-string juststr " . ")))
+                   (bin-comm (split-string juststr " \\. ")))
               (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
                      (comm (car (cdr bin-comm)))
                      (psnickle (format remind-bindings--format-bincom bin comm)))
-                (add-to-list 'bindlist psnickle t)))))
-        bindlist))))
+                (push psnickle bindlist)))))
+        (nreverse bindlist)))))
 
 
 (defun remind-bindings-getusepackages ()
@@ -179,11 +181,13 @@
              ;; End of file
              (setq stop t)))
           (end-of-line))
-        (map-into packbinds 'hash-table)))))
+        (map-into (nreverse packbinds) 'hash-table)))))
+
 
 (defun remind-bindings-combine-lists (map1 map2)
   "Take the package bindings from MAP1 and MAP2 and merge them on package name."
   (map-merge-with 'hash-table 'append map1 map2))
+
 
 (defun remind-bindings-makequotes (hashtable)
   "Convert a HASHTABLE of bindings into a single formatted list."
@@ -199,15 +203,15 @@
      hashtable)
     total))
 
+
 (defun remind-bindings-initialise ()
   "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
-  (unless remind-bindings--quoteslist
-    (let ((globals (remind-bindings-getglobal))
-          (usepack (remind-bindings-getusepackages)))
-      (let* ((comb (remind-bindings-combine-lists globals usepack)))
-        (setq remind-bindings--quoteslist
-              (remind-bindings-makequotes comb)))))
-  (omni-quotes-set-populate remind-bindings--quoteslist "bindings"))
+  (let ((globals (remind-bindings-getglobal))
+        (usepack (remind-bindings-getusepackages)))
+    (let* ((comb (remind-bindings-combine-lists globals usepack))
+           (quos (remind-bindings-makequotes comb)))
+      (omni-quotes-set-populate quos "bindings"))))
+
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
