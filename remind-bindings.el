@@ -106,7 +106,7 @@
 
 (defun remind-bindings-getglobal ()
   "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
-  (with-current-buffer remind-bindings-initfile
+  (with-current-buffer (find-file remind-bindings-initfile)
     (save-excursion
       (goto-char 0)
       (let ((globbers nil)
@@ -164,7 +164,7 @@
 
 (defun remind-bindings-getusepackages ()
   "Process entire Emacs init.el for package bindings."
-  (with-current-buffer remind-bindings-initfile
+  (with-current-buffer (find-file remind-bindings-initfile)
     (save-excursion
       (goto-char 0)
       (let ((packbinds nil)
