@@ -1,12 +1,13 @@
 #+TITLE: remind-bindings.el
 
-[![MELPA](https://melpa.org/packages/remind-bindings-badge.svg)](https://melpa.org/#/remind-bindings)
+# NOTE: HTML for the GitHub renderer, courtesy of alphapapa for the template.
+#+HTML: <a href="https://melpa.org/#/remind-bindings"><img src="https://melpa.org/packages/remind-bindings-badge.svg"></a> <a href="https://stable.melpa.org/#/remind-bindings"><img src="https://stable.melpa.org/packages/remind-bindings-badge.svg"></a>
 
  It is sometimes hard to remember what bindings you have set without having to open up your emacs *init* file and checking yourself.
 
- This package parses your Emacs init file for `use-package` or `global-set-key` calls and summarises the bindings it detects on a package-by-package basis.
+ This package parses your Emacs init file for =use-package= or =global-set-key= calls and summarises the bindings it detects on a package-by-package basis.
 
- When emacs is idle, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][`omni-quotes.el`]].
+ When emacs is idle, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][=omni-quotes.el=]].
 
 ** Installation
 
