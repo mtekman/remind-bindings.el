@@ -7,7 +7,7 @@
 
  This package parses your Emacs init file for =use-package= or =global-set-key= calls and summarises the bindings it detects on a package-by-package basis.
 
- When emacs is idle, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][=omni-quotes.el=]].
+ When emacs is idle, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][omni-quotes.el]].
 
 ** Installation
 
