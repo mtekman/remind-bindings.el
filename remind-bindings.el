@@ -3,9 +3,9 @@
 ;; Copright (C) 2020 Mehmet Tekman <mtekman89@gmail.com>
 
 ;; Author: Mehmet Tekman
-;; URL: https://github.com/mtekman/omni-quotes-rememberbindings.el
+;; URL: https://github.com/mtekman/remind-bindings.el
 ;; Keywords: outlines
-;; Package-Requires: ((emacs "24.4") (omni-quotes))
+;; Package-Requires: ((emacs "25.1") (omni-quotes))
 ;; Version: 0.2
 
 ;;; Commentary:
@@ -18,6 +18,8 @@
 ;; a small reminder during idle periods.
 
 ;;; Code:
+(require 'subr-x)
+
 (defgroup remind-bindings nil
   "Group for remembering bindings."
   :group 'emacs)
@@ -27,7 +29,7 @@
   :group 'remind-bindings)
 
 (defvar remind-bindings--quoteslist nil
-  "List of string to prompt users during idle times")
+  "List of string to prompt users during idle times.")
 
 (defcustom remind-bindings-initfile nil
   "The Emacs init file with your bindings in it."
@@ -51,7 +53,6 @@
 
 (defun remind-bindings-nextusepackage ()
   "Get the name and parenthesis bounds of the next ‘use-package’."
-  (interactive)
   (search-forward "(use-package")
   (beginning-of-line)
   (let* ((bound (show-paren--default))
@@ -70,7 +71,6 @@
 
 (defun remind-bindings-nextglobalkeybind ()
   "Get the binding and name of the next ‘global-set-key’."
-  (interactive)
   (search-forward "(global-set-key ") ;; throw error if no more
   (beginning-of-line) ;; get the total bounds
   (let* ((bound (show-paren--default))
@@ -105,8 +105,7 @@
          (end-of-line))))))
 
 (defun remind-bindings-getglobal ()
-  "Process entire Emacs init.el for global bindings and build an alist map grouped on "
-  (interactive)
+  "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
   (with-current-buffer remind-bindings-initfile
     (save-excursion
       (goto-char 0)
@@ -133,7 +132,6 @@
 
 (defun remind-bindings-fromfunc-getpackagename (fname)
   "Get the name of the package the FNAME belongs to.  Return nil if none found."
-  (interactive)
   (let ((packname (symbol-file (intern fname))))
     (when packname
       (let* ((bnamext (car (last (split-string packname "/")))))
@@ -142,7 +140,6 @@
 
 (defun remind-bindings-bindsinpackage (packinfo)
   "Return the name and bindings for the current package named and bounded by PACKINFO."
-  (interactive)
   (let ((bindlist (list (nth 0 packinfo))) ;; package name is first
         (inner (nth 1 packinfo))
         (outer (nth 2 packinfo)))
@@ -165,7 +162,6 @@
 
 (defun remind-bindings-getusepackages ()
   "Process entire Emacs init.el for package bindings."
-  (interactive)
   (with-current-buffer remind-bindings-initfile
     (save-excursion
       (goto-char 0)
@@ -186,12 +182,11 @@
         (map-into packbinds 'hash-table)))))
 
 (defun remind-bindings-combine-lists (map1 map2)
-  "Take the package bindings from MAP1 and MAP2 and merge them on package name"
+  "Take the package bindings from MAP1 and MAP2 and merge them on package name."
   (map-merge-with 'hash-table 'append map1 map2))
 
 (defun remind-bindings-makequotes (hashtable)
-  "Convert a hashtable of bindings into a single formatted list."
-  (interactive)
+  "Convert a HASHTABLE of bindings into a single formatted list."
   (let ((total))
     (maphash
      (lambda (packname bindings)
@@ -205,6 +200,7 @@
     total))
 
 (defun remind-bindings-initialise ()
+  "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
   (unless remind-bindings--quoteslist
     (let ((globals (remind-bindings-getglobal))
           (usepack (remind-bindings-getusepackages)))
