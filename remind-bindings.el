@@ -73,9 +73,8 @@
   (search-forward "(global-set-key ") ;; throw error if no more
   (beginning-of-line) ;; get the total bounds
   (let* ((bound (show-paren--default))
-         (first (nth 0 bound))
-         (last (nth 3 bound)))
-    (search-forward "global-set-key " last)
+         (outer (nth 3 bound)))
+    (search-forward "global-set-key " outer)
     (let* ((bound (show-paren--default))
            (keybf (nth 0 bound))
            (keybl (nth 3 bound))
@@ -88,12 +87,12 @@
                       beg (- end 1)))))
     ;; Try to grab the command, quote or interactive
       (condition-case nofuncstart
-          (progn (unless (search-forward "(interactive) " last t)
-                   (unless (search-forward "'" last t)
-                     (unless (search-forward "(" last t))))
+          (progn (unless (search-forward "(interactive) " outer t)
+                   (unless (search-forward "'" outer t)
+                     (unless (search-forward "(" outer t))))
                  (let* ((func
                          (buffer-substring-no-properties
-                          (point) (- last 1)))
+                          (point) (- outer 1)))
                         (package-name (or (remind-bindings-fromfunc-getpackagename func)
                                           remind-bindings-initfile)))
                    (end-of-line)
@@ -101,6 +100,7 @@
                      `(,package-name ,bname))))
         (error
          ;; Move to end of line and give nil
+         (ignore nofuncstart)
          (end-of-line))))))
 
 
@@ -126,6 +126,7 @@
                       (map-put globbers pname binde testfn)))
                   (end-of-line))))
           (error
+           (ignore err)
            (end-of-line)
            (setq stop t)))
         (map-into globbers 'hash-table)))))
@@ -179,6 +180,7 @@
                       (push binds packbinds)))))
             (error
              ;; End of file
+             (ignore err)
              (setq stop t)))
           (end-of-line))
         (map-into (nreverse packbinds) 'hash-table)))))
