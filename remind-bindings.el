@@ -149,18 +149,18 @@
     (when inner
       (goto-char inner)
       (save-excursion
-        (search-forward ":bind " outer t)
-        (while (search-forward-regexp "\( ?\"[^)]*\" ?\. [^\") ]*\)" outer t)
-          (save-excursion
-            (let* ((end (- (point) 1))
-                   (sta (+ (search-backward "(") 1))
-                   (juststr (buffer-substring-no-properties sta end))
-                   (bin-comm (split-string juststr " \\. ")))
-              (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
-                     (comm (car (cdr bin-comm)))
-                     (psnickle (format remind-bindings--format-bincom bin comm)))
-                (push psnickle bindlist)))))
-        (nreverse bindlist)))))
+        (when (search-forward ":bind" outer 1) ;; if fail, move to limit
+          (while (search-forward-regexp "\( ?\"[^)]*\" ?\. [^\") ]*\)" outer t)
+            (save-excursion
+              (let* ((end (- (point) 1))
+                     (sta (+ (search-backward "(") 1))
+                     (juststr (buffer-substring-no-properties sta end))
+                     (bin-comm (split-string juststr " \\. ")))
+                (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
+                       (comm (car (cdr bin-comm)))
+                       (psnickle (format remind-bindings--format-bincom bin comm)))
+                  (push psnickle bindlist)))))
+          (nreverse bindlist))))))
 
 
 (defun remind-bindings-getusepackages ()
@@ -186,12 +186,19 @@
         (map-into (nreverse packbinds) 'hash-table)))))
 
 
-(defun remind-bindings-combine-lists (map1 map2)
-  "Take the package bindings from MAP1 and MAP2 and merge them on package name."
-  (map-merge-with 'hash-table 'append map1 map2))
+(defvar remind-bindings--internalbindings nil
+  "Internal storage for all the combined bindings.")
+
+(defun remind-bindings-make-lists ()
+  "Aggregate the `use-package` and `global-set-key` bindings and merge them by package."
+  (unless remind-bindings--internalbindings
+    (let ((globals (remind-bindings-getglobal))
+          (usepack (remind-bindings-getusepackages)))
+      (setq remind-bindings--internalbindings
+            (map-merge-with 'hash-table 'append globals usepack)))))
 
 
-(defun remind-bindings-makequotes (hashtable)
+(defun remind-bindings-make-quotes (hashtable)
   "Convert a HASHTABLE of bindings into a single formatted list."
   (let ((total))
     (maphash
@@ -205,15 +212,49 @@
      hashtable)
     total))
 
+(defvar remind-bindings-buffername "*bindings.org*"
+  "Name of the buffer to render bindings.")
 
+(defun remind-bindings-make-buffer (hashtable)
+  "Convert a HASHTABLE of bindings into a side-buffer."
+  (let ((buff (get-buffer-create remind-bindings-buffername)))
+    (with-current-buffer buff
+      (read-only-mode 0)
+      (erase-buffer)
+      (maphash
+       (lambda (packname bindings)
+         (insert (format "** %s" (string-trim packname)))
+         (insert "\n  - ")
+         (let ((replacefn '(lambda (x) (s-replace "→" " :: "  x))))
+           (insert (mapconcat replacefn bindings "\n  - ")))
+         (insert "\n"))
+       hashtable)
+      (read-only-mode t)
+      (org-mode))))
+
+
+;;;###autoload
 (defun remind-bindings-initialise ()
   "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
-  (let ((globals (remind-bindings-getglobal))
-        (usepack (remind-bindings-getusepackages)))
-    (let* ((comb (remind-bindings-combine-lists globals usepack))
-           (quos (remind-bindings-makequotes comb)))
-      (omni-quotes-set-populate quos "bindings"))))
+  (remind-bindings-make-lists)
+  (when remind-bindings--internalbindings
+    ;; omni-quotes
+    (omni-quotes-set-populate (remind-bindings-make-quotes
+                               remind-bindings--internalbindings)
+                              "bindings")
+    ;; make-buffer
+    (remind-bindings-make-lists remind-bindings--internalbindings)))
 
+
+;;;###autoload
+(defun remind-bindings-toggle-buffer ()
+  "Toggle the sidebar. For now the window rules for this are static."
+  (interactive)
+  (if (get-buffer-window-list remind-bindings-buffername)
+      (popwin:close-popup-window)
+    (popwin:popup-buffer
+     remind-bindings-buffername
+     :width 0.25 :position 'right :noselect :stick)))
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
