@@ -37,10 +37,18 @@
   :type 'string
   :group 'remind-bindings)
 
-(defcustom remind-bindings--format-bincom "%s → %s"
+(defcustom remind-bindings-buffername "*bindings.org*"
+  "Name of the buffer to render bindings."
+  :type 'string
+  :group 'remind-bindings)
+
+(defcustom remind-bindings--format-bincom " → "
   "The format for displaying the binding (first %s) and the command (last %s)."
   :type 'string
   :group 'remind-bindings-format)
+
+(defconst remind-bindings--format-bincom-internal " &&& "
+  "Internal format for putting together binding to command.")
 
 (defcustom remind-bindings--format-packbincom "[%s] %s"
   "The format for displaying the package (first %s) and the bindings (last %s)."
@@ -52,8 +60,101 @@
   :type 'string
   :group 'remind-bindings-format)
 
+;; --- global-set-key --- funcs
+(defun remind-bindings-globalsetkey ()
+  "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
+  (with-current-buffer (find-file-noselect remind-bindings-initfile)
+    (save-excursion
+      (goto-char 0)
+      (let ((globbers nil))
+        (condition-case err
+            (while t
+                (let ((glob (remind-bindings-globalsetkey-next)))
+                  (when glob
+                    (let ((pname (string-trim (first glob)))
+                          (binde (car (last glob))))
+                      (push `(,pname ,binde) globbers))))
+              (end-of-line))
+          (error
+           (ignore err)
+           (end-of-line)
+           ;; Convert alist into hash-table
+           (map-into
+            (->> globbers
+                 (seq-group-by #'car)
+                 (--map (cons (car it) (-map #'cadr (cdr it)))))
+            'hash-table)))))))
 
-(defun remind-bindings-nextusepackage ()
+(defun remind-bindings-globalsetkey-next ()
+  "Get the binding and name of the next ‘global-set-key’."
+  (search-forward "(global-set-key ") ;; throw error if no more
+  (beginning-of-line) ;; get the total bounds
+  (let ((bsub 'buffer-substring-no-properties)
+        (getfn 'remind-bindings-globalsetkey-fromfunc)
+        (initfile remind-bindings-initfile)
+        (bincomint remind-bindings--format-bincom-internal))
+    (let* ((bound (show-paren--default))
+           (outer (nth 3 bound)))
+    (search-forward "global-set-key " outer)
+    (let* ((bounk (show-paren--default))
+           (keybf (nth 0 bounk))
+           (keybl (nth 3 bounk))
+           (keyb (apply bsub `(,keybf ,keybl))))
+      (when (search-forward "kbd \"" keybl t)
+        (let ((beg (point))
+              (end (- (search-forward "\"" keybl) 1)))
+          (setq keyb (apply bsub `(,beg ,end)))))
+      ;; Try to grab the command, quote or interactive
+      (condition-case nofuncstart
+          (progn (unless (search-forward "(interactive) " outer t)
+                   (unless (search-forward "'" outer t)
+                     (unless (search-forward "(" outer t))))
+                 (let ((ninner (point))
+                       (nouter (- outer 1)))
+                   (let* ((func (apply bsub `(,ninner ,nouter)))
+                          (package-name (apply getfn `(,func ,initfile))))
+                     (end-of-line)
+                     (let ((bname (concat keyb bincomint func)))
+                       `(,package-name ,bname)))))
+        (error
+         ;; Move to end of line and give nil
+         (ignore nofuncstart)
+         (end-of-line)))))))
+
+(defun remind-bindings-globalsetkey-fromfunc (fname default)
+  "Get the name of the package the FNAME belongs to.  Return the DEFAULT if none found."
+  (let ((packname (symbol-file (intern fname))))
+    (if packname
+      (let* ((bnamext (car (last (split-string packname "/")))))
+        ;; name without extension
+        (car (split-string bnamext "\\.")))
+      default)))
+
+;; --- usepackages --- funcs
+(defun remind-bindings-usepackages ()
+  "Process entire Emacs init.el for package bindings."
+  (with-current-buffer (find-file-noselect remind-bindings-initfile)
+    (save-excursion
+      (goto-char 0)
+      (let ((packbinds nil)
+            (stop nil))
+        (while (not stop)
+          (condition-case err
+              (let ((packinfo (remind-bindings-usepackages-next)))
+                (when (nth 1 packinfo) ;; has bounds
+                  (let ((binds (remind-bindings-usepackages-bindsinpackage
+                                packinfo)))
+                    (message (car binds))
+                    (when (nth 1 binds)
+                      (push binds packbinds)))))
+            (error
+             ;; End of file
+             (ignore err)
+             (setq stop t)))
+          (end-of-line))
+        (map-into (nreverse packbinds) 'hash-table)))))
+
+(defun remind-bindings-usepackages-next ()
   "Get the name and parenthesis bounds of the next ‘use-package’."
   (search-forward "(use-package")
   (beginning-of-line)
@@ -67,85 +168,11 @@
              (end (progn
                     (search-forward-regexp "\\( \\|)\\|$\\)" outer)
                     (point)))
-             (name (buffer-substring-no-properties beg end)))
+             (name (string-trim (buffer-substring-no-properties beg end))))
         (goto-char outer)
         `(,name ,inner ,outer)))))
 
-
-(defun remind-bindings-nextglobalkeybind ()
-  "Get the binding and name of the next ‘global-set-key’."
-  (search-forward "(global-set-key ") ;; throw error if no more
-  (beginning-of-line) ;; get the total bounds
-  (let* ((bound (show-paren--default))
-         (outer (nth 3 bound)))
-    (search-forward "global-set-key " outer)
-    (let* ((bound (show-paren--default))
-           (keybf (nth 0 bound))
-           (keybl (nth 3 bound))
-           (keyb (buffer-substring-no-properties
-                  keybf keybl)))
-      (when (search-forward "kbd \"" keybl t)
-        (let ((beg (point))
-              (end (search-forward "\"" keybl)))
-          (setq keyb (buffer-substring-no-properties
-                      beg (- end 1)))))
-    ;; Try to grab the command, quote or interactive
-      (condition-case nofuncstart
-          (progn (unless (search-forward "(interactive) " outer t)
-                   (unless (search-forward "'" outer t)
-                     (unless (search-forward "(" outer t))))
-                 (let* ((func
-                         (buffer-substring-no-properties
-                          (point) (- outer 1)))
-                        (package-name (or (remind-bindings-fromfunc-getpackagename func)
-                                          remind-bindings-initfile)))
-                   (end-of-line)
-                   (let ((bname (format remind-bindings--format-bincom keyb func)))
-                     `(,package-name ,bname))))
-        (error
-         ;; Move to end of line and give nil
-         (ignore nofuncstart)
-         (end-of-line))))))
-
-
-(defun remind-bindings-getglobal ()
-  "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
-  (with-current-buffer (find-file remind-bindings-initfile)
-    (save-excursion
-      (goto-char 0)
-      (let ((globbers nil)
-            (stop nil)
-            (testfn 'string=))
-        (condition-case err
-            (while (not stop)
-              (let ((glob (remind-bindings-nextglobalkeybind)))
-                (when glob
-                  (let ((pname (string-trim (first glob)))
-                        (binde (last glob)))
-                    (if (map-contains-key globbers pname)
-                        (let* ((values (map-elt globbers pname))
-                               (newvls (append values binde)))
-                          (map-put globbers pname newvls))
-                      ;; if it doesn't exist, initialise
-                      (map-put globbers pname binde)))
-                  (end-of-line))))
-          (error
-           (ignore err)
-           (end-of-line)
-           (setq stop t)))
-        (map-into globbers 'hash-table)))))
-
-
-(defun remind-bindings-fromfunc-getpackagename (fname)
-  "Get the name of the package the FNAME belongs to.  Return nil if none found."
-  (let ((packname (symbol-file (intern fname))))
-    (when packname
-      (let* ((bnamext (car (last (split-string packname "/")))))
-        ;; name without extension
-        (car (split-string bnamext "\\."))))))
-
-
-(defun remind-bindings-bindsinpackage (packinfo)
+(defun remind-bindings-usepackages-bindsinpackage (packinfo)
   "Return the name and bindings for the current package named and bounded by PACKINFO."
   (let ((bindlist (list (nth 0 packinfo))) ;; package name is first
         (inner (nth 1 packinfo))
@@ -162,66 +189,42 @@
                      (bin-comm (split-string juststr " \\. ")))
                 (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
                        (comm (car (cdr bin-comm)))
-                       (psnickle (format remind-bindings--format-bincom bin comm)))
+                       (psnickle (concat bin
+                                         remind-bindings--format-bincom-internal
+                                         comm)))
                   (push psnickle bindlist)))))
           (nreverse bindlist))))))
 
-
-(defun remind-bindings-getusepackages ()
-  "Process entire Emacs init.el for package bindings."
-  (with-current-buffer (find-file remind-bindings-initfile)
-    (save-excursion
-      (goto-char 0)
-      (let ((packbinds nil)
-            (stop nil))
-        (while (not stop)
-          (condition-case err
-              (let ((packinfo (remind-bindings-nextusepackage)))
-                (when (nth 1 packinfo) ;; has bounds
-                  (let ((binds (remind-bindings-bindsinpackage packinfo)))
-                    (message (car binds))
-                    (when (nth 1 binds)
-                      (push binds packbinds)))))
-            (error
-             ;; End of file
-             (ignore err)
-             (setq stop t)))
-          (end-of-line))
-        (map-into (nreverse packbinds) 'hash-table)))))
-
-
-(defvar remind-bindings--internalbindings nil
-  "Internal storage for all the combined bindings.")
-
-(defun remind-bindings-make-lists ()
+;; --- Main --
+(defun remind-bindings-aggregatelists ()
   "Aggregate the `use-package` and `global-set-key` bindings and merge them by package."
-  (unless remind-bindings--internalbindings
-    (let ((globals (remind-bindings-getglobal))
-          (usepack (remind-bindings-getusepackages)))
-      (setq remind-bindings--internalbindings
-            (map-merge-with 'hash-table 'append globals usepack)))))
+  (let ((globals (remind-bindings-globalsetkey))
+        (usepack (remind-bindings-usepackages)))
+    (map-merge-with 'hash-table 'append globals usepack)))
 
-
-(defun remind-bindings-make-quotes (hashtable)
+(defun remind-bindings-omniquotes-make (hashtable)
   "Convert a HASHTABLE of bindings into a single formatted list."
-  (let ((total))
+  (let ((bcomint remind-bindings--format-bincom-internal)
+        (bcom remind-bindings--format-bincom)
+        (bsep remind-bindings--format-bindingsep)
+        (pbin remind-bindings--format-packbincom)
+        (total))
     (maphash
      (lambda (packname bindings)
-       (let ((fmt (format
-                   remind-bindings--format-packbincom
-                   packname
-                   (mapconcat 'identity bindings
-                              remind-bindings--format-bindingsep))))
+       (let* ((replacefn `(lambda (x) (s-replace ,bcomint ,bcom x)))
+              (newbsep (mapcar replacefn bindings))
+              (reform (mapconcat 'identity newbsep bsep))
+              ;; [packname] bindings
+              (fmt (format pbin packname reform)))
          (push fmt total)))
      hashtable)
     total))
 
-(defvar remind-bindings-buffername "*bindings.org*"
-  "Name of the buffer to render bindings.")
-
-(defun remind-bindings-make-buffer (hashtable)
-  "Convert a HASHTABLE of bindings into a side-buffer."
-  (let ((buff (get-buffer-create remind-bindings-buffername)))
+(defun remind-bindings-sidebuffer-make (hashtable)
+  "Populate a sidebuffer with a HASHTABLE of bindings."
+  (let* ((buff (get-buffer-create remind-bindings-buffername))
+         (prevsep remind-bindings--format-bincom-internal)
+         (replacefn `(lambda (x) (s-replace ,prevsep " :: "  x))))
     (with-current-buffer buff
       (read-only-mode 0)
       (erase-buffer)
@@ -229,41 +232,64 @@
        (lambda (packname bindings)
          (insert (format "** %s" (string-trim packname)))
          (insert "\n  - ")
-         (let ((replacefn '(lambda (x) (s-replace "→" " :: "  x))))
-           (insert (mapconcat replacefn bindings "\n  - ")))
+         (insert (mapconcat replacefn bindings "\n  - "))
          (insert "\n"))
        hashtable)
-      (read-only-mode t)
-      (org-mode))))
-
+      (org-mode)
+      ;; (mark-whole-buffer) -- interactive only...
+      (push-mark (point))
+      (push-mark (point-max) nil t)
+      (goto-char (point-min))
+      ;;
+      (org-sort-entries nil ?a ) ;; alphabetic sort of entries
+      (read-only-mode t))))
 
 ;;;###autoload
 (defun remind-bindings-initialise ()
   "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
   (if remind-bindings-initfile
-      (progn
-        (remind-bindings-make-lists)
-        (when remind-bindings--internalbindings
-          ;; omni-quotes
-          (omni-quotes-set-populate
-           (remind-bindings-make-quotes
-            remind-bindings--internalbindings)
-           "bindings")
-          ;; make-buffer
-          (remind-bindings-make-lists
-           remind-bindings--internalbindings)))
+      (let ((intbinds (remind-bindings-aggregatelists)))
+        (let ((make-quotes (remind-bindings-omniquotes-make intbinds))
+              (make-sidebf (remind-bindings-sidebuffer-make intbinds)))
+          (ignore make-sidebf) ;; it just aligns nicely in the let part...
+          (omni-quotes-set-populate make-quotes "bindings")))
     (message "Please set ‘remind-bindings-initfile’ first")))
 
+(defun remind-bindings-togglebuffer-isopen ()
+  "Check if the sidebuffer is open."
+  ;; For some reason ’(get-buffer-window-list)’ fails to list
+  ;; all active buffers in Emacs 28.0.50...
+  (let ((funclist (lambda (x) (buffer-name (window-buffer x))))
+        (bname remind-bindings-buffername)
+        (windlist (window-list)))
+    (let ((bnamelist (mapcar funclist windlist)))
+      (member bname bnamelist))))
+
+(defun remind-bindings-togglebuffer-bufferexists ()
+  "Check if the buffer exists."
+  (let* ((funclist (lambda (x) (buffer-name x)))
+         (bname remind-bindings-buffername)
+         (blist (buffer-list))
+         (nlist (mapcar funclist blist)))
+    (member bname nlist)))
 
 ;;;###autoload
-(defun remind-bindings-toggle-buffer ()
-  "Toggle the sidebar. For now the window rules for this are static."
+(defun remind-bindings-togglebuffer (&optional level)
+  "Toggle the sidebar with static window rules.  Initialise and recurse to a max LEVEL of 2."
   (interactive)
-  (if (get-buffer-window-list remind-bindings-buffername)
+  (or level (setq level 0))
+  (if (remind-bindings-togglebuffer-isopen)
       (popwin:close-popup-window)
-    (popwin:popup-buffer
-     remind-bindings-buffername
-     :width 0.25 :position 'right :noselect :stick)))
+    (if (remind-bindings-togglebuffer-bufferexists)
+        (popwin:popup-buffer remind-bindings-buffername
+                             :width 0.25 :position 'right
+                             :noselect :stick)
+      (setq level (+ level 1))
+      (if (> level 2)
+          (message "Could not initialise")
+        (remind-bindings-initialise)
+        (remind-bindings-togglebuffer)))))
+
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
