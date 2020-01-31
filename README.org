@@ -9,7 +9,7 @@
 
  When the show-when-idle setting is true, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][omni-quotes.el]].
 
- Otherwise the bindings can be toggled in a sidebar.
+ Otherwise the bindings can be toggled in a popup sidebar.
 
 ** Installation
 
