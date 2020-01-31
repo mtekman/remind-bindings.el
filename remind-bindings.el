@@ -20,8 +20,9 @@
 ;;; Code:
 (require 'subr-x)
 (require 'omni-quotes)
+(require 'popwin)
 
-;; Package-Requires: (omni-quotes "20170425.1832"))
+;; Package-Requires: (omni-quotes "20170425.1832") (popwin "20200122.1440")
 ;;  -- throws error as not installable...
 
 (defgroup remind-bindings nil
