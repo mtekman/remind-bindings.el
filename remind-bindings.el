@@ -212,11 +212,13 @@
 
 (defun remind-bindings-initialise ()
   "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
-  (let ((globals (remind-bindings-getglobal))
-        (usepack (remind-bindings-getusepackages)))
-    (let* ((comb (remind-bindings-combine-lists globals usepack))
-           (quos (remind-bindings-makequotes comb)))
-      (omni-quotes-set-populate quos "bindings"))))
+  (if remind-bindings-initfile
+      (let ((globals (remind-bindings-getglobal))
+            (usepack (remind-bindings-getusepackages)))
+        (let* ((comb (remind-bindings-combine-lists globals usepack))
+               (quos (remind-bindings-makequotes comb)))
+          (omni-quotes-set-populate quos "bindings")))
+    (message "Please set ‘remind-bindings-initfile’ first")))
 
 
 (provide 'remind-bindings)
