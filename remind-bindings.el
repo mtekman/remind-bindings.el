@@ -5,7 +5,7 @@
 ;; Author: Mehmet Tekman
 ;; URL: https://github.com/mtekman/remind-bindings.el
 ;; Keywords: outlines
-;; Package-Requires: ((emacs "25.1") (omni-quotes))
+;; Package-Requires: ((emacs "25.1"))
 ;; Version: 0.2
 
 ;;; Commentary:
@@ -19,6 +19,10 @@
 
 ;;; Code:
 (require 'subr-x)
+(require 'omni-quotes)
+
+;; Package-Requires: (omni-quotes "20170425.1832"))
+;;  -- throws error as not installable...
 
 (defgroup remind-bindings nil
   "Group for remembering bindings."
