@@ -122,12 +122,12 @@
                 (when glob
                   (let ((pname (string-trim (first glob)))
                         (binde (last glob)))
-                    (if (map-contains-key globbers pname testfn)
-                        (let* ((values (map-elt globbers pname nil testfn))
+                    (if (map-contains-key globbers pname)
+                        (let* ((values (map-elt globbers pname))
                                (newvls (append values binde)))
-                          (map-put globbers pname newvls testfn))
+                          (map-put globbers pname newvls))
                       ;; if it doesn't exist, initialise
-                      (map-put globbers pname binde testfn)))
+                      (map-put globbers pname binde)))
                   (end-of-line))))
           (error
            (ignore err)
