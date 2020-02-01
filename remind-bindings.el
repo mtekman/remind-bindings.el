@@ -299,5 +299,47 @@
         (remind-bindings-togglebuffer)))))
 
 
+;; Methods to guess the modes in the current buffer
+(defvar remind-bindings-modespecific-buffermap nil
+  "Buffer Map of bindings.")
+
+(defcustom remind-bindings-enable-bufferspecific t
+  "Enable showing buffer-specific bindings only.")
+
+(defun remind-bindings-specific-activefiltered (alistmap)
+  "Get a list of packages with modes active in buffer, and match them to ALISTMAP of packages."
+  (let ((fn1 '(lambda (x) (symbol-name (car x))))
+        (fn2 '(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
+    (let* ((actsmode (mapcar fn1 minor-mode-alist))
+           (sansmode (mapcar fn2 actsmode))
+           (sortmode (cl-sort sansmode 'string-lessp))) ;; eh, why not.
+      (map-filter (lambda (k v) (member k sortmode)) alistmap))))
+
+(defun remind-bindings-specific ()
+  "Grab the modes for the current buffer."
+  (let ((bfnam (buffer-file-name (current-buffer)))
+        (damap remind-bindings-modespecific-buffermap))
+    (let ((binds (map-elt damap bfnam)))
+      (unless binds
+        (let* ((allrbinds (remind-bindings-aggregatelists))
+               (buffbinds (remind-bindings-modespecific-activefiltered
+                           allrbinds)))
+          (setq remind-bindings-modespecific-buffermap
+                (map-insert damap bfnam buffbinds))
+          (setq binds buffbinds)))
+      (remind-bindings-doitall binds))))
+
+(define-minor-mode remind-bindings-specific-mode
+  "Allow remind-bindings to show buffer specific bindings only"
+  nil
+  " ¶"
+  nil
+  (if remind-bindings-specific-mode
+      (progn (message "Watching buffers")
+             (add-hook 'window-selection-change-functions
+                       #'remind-bindings-specific nil t))
+    (remove-hook 'window-selection-change-functions #'remind-bindings-specific t)))
+
+
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
