@@ -306,7 +306,7 @@
 
 
 ;; Methods to guess the modes in the current buffer
-(defvar remind-bindings-modespecific-buffermap nil
+(defvar remind-bindings-specific-buffermap nil
   "Buffer Map of bindings.")
 
 (defcustom remind-bindings-enable-bufferspecific t
@@ -324,15 +324,16 @@
 (defun remind-bindings-specific ()
   "Grab the modes for the current buffer."
   (let ((bfnam (buffer-file-name (current-buffer)))
-        (damap remind-bindings-modespecific-buffermap))
+        (damap remind-bindings-specific-buffermap))
     (let ((binds (map-elt damap bfnam)))
       (unless binds
         (let* ((allrbinds (remind-bindings-aggregatelists))
-               (buffbinds (remind-bindings-modespecific-activefiltered
-                           allrbinds)))
-          (setq remind-bindings-modespecific-buffermap
-                (map-insert damap bfnam buffbinds))
-          (setq binds buffbinds)))
+               (bufflists (remind-bindings-specific-activefiltered
+                           allrbinds))
+               (buffbinds (map-into bufflists 'hash-table)))
+          (setq binds buffbinds)
+          (setq remind-bindings-specific-buffermap
+                (map-insert damap bfnam buffbinds))))
       (remind-bindings-doitall binds))))
 
 (define-minor-mode remind-bindings-specific-mode
@@ -342,10 +343,13 @@
   nil
   (if remind-bindings-specific-mode
       (progn (message "Watching buffers")
+             (remind-bindings-specific)
              (add-hook 'window-selection-change-functions
                        #'remind-bindings-specific nil t))
-    (remove-hook 'window-selection-change-functions #'remind-bindings-specific t)))
-
+    ;; re-initialise full bindings again
+    (remind-bindings-initialise)
+    (remove-hook 'window-selection-change-functions
+                 #'remind-bindings-specific t)))
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
