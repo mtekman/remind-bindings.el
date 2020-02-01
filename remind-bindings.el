@@ -93,8 +93,8 @@
   "Get the binding and name of the next ‘global-set-key’."
   (search-forward "(global-set-key ") ;; throw error if no more
   (beginning-of-line) ;; get the total bounds
-  (let ((bsub 'buffer-substring-no-properties)
-        (getfn 'remind-bindings-globalsetkey-fromfunc)
+  (let ((bsub #'buffer-substring-no-properties)
+        (getfn #'remind-bindings-globalsetkey-fromfunc)
         (initfile remind-bindings-initfile)
         (bincomint remind-bindings--format-bincom-internal))
     (let* ((bound (funcall show-paren-data-function))
@@ -256,10 +256,10 @@
         (remind-bindings-doitall intbinds))
     (message "Please set ‘remind-bindings-initfile’ first")))
 
-(defun remind-bindings-doitall (intbinds)
+(defun remind-bindings-doitall (bindings)
   "Take an alist of BINDINGS and set the omniquotes and sidebuffer."
-  (let ((make-quotes (remind-bindings-omniquotes-make intbinds))
-        (make-sidebf (remind-bindings-sidebuffer-make intbinds)))
+  (let ((make-quotes (remind-bindings-omniquotes-make bindings))
+        (make-sidebf (remind-bindings-sidebuffer-make bindings)))
     (ignore make-sidebf) ;; it just aligns nicely in the let part...
     (omni-quotes-set-populate make-quotes "bindings")))
 
@@ -275,11 +275,9 @@
 
 (defun remind-bindings-togglebuffer-bufferexists ()
   "Check if the buffer exists."
-  (let* ((funclist (lambda (x) (buffer-name x)))
-         (bname remind-bindings-buffername)
-         (blist (buffer-list))
-         (nlist (mapcar funclist blist)))
-    (member bname nlist)))
+  (let ((bname remind-bindings-buffername)
+        (blist (buffer-list)))
+    (member bname (mapcar 'buffer-name blist))))
 
 ;;;###autoload
 (defun remind-bindings-togglebuffer (&optional level)
@@ -305,21 +303,24 @@
         (remind-bindings-togglebuffer)))))
 
 
-;; Methods to guess the modes in the current buffer
+;; -- Methods to guess the modes in the current buffer -- 
 (defvar remind-bindings-specific-buffermap nil
   "Buffer Map of bindings.")
 
 (defcustom remind-bindings-enable-bufferspecific t
-  "Enable showing buffer-specific bindings only.")
+  "Enable showing buffer-specific bindings only."
+  :type 'boolean
+  :group 'remind-bindings)
+
 
 (defun remind-bindings-specific-activefiltered (alistmap)
   "Get a list of packages with modes active in buffer, and match them to ALISTMAP of packages."
-  (let ((fn1 '(lambda (x) (symbol-name (car x))))
-        (fn2 '(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
+  (let ((fn1 #'(lambda (x) (symbol-name (car x))))
+        (fn2 #'(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
            (sansmode (mapcar fn2 actsmode)))
            ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
-      (map-filter (lambda (k v) (member k sansmode)) alistmap))))
+      (map-filter (lambda (k v) (ignore v)(member k sansmode)) alistmap))))
 
 (defun remind-bindings-specific ()
   "Grab the modes for the current buffer."
@@ -342,7 +343,7 @@
   " ¶"
   nil
   (if remind-bindings-specific-mode
-      (progn (message "Watching buffers")
+      (progn (message "Buffer Specific Bindings Only")
              (remind-bindings-specific)
              (add-hook 'window-selection-change-functions
                        #'remind-bindings-specific nil t))
