@@ -289,13 +289,19 @@
   (if (remind-bindings-togglebuffer-isopen)
       (popwin:close-popup-window)
     (if (remind-bindings-togglebuffer-bufferexists)
-        (popwin:popup-buffer remind-bindings-buffername
-                             :width 0.25 :position 'right
-                             :noselect :stick)
+        ;; If we're in buffer-specific mode, initialise them.
+        (progn (when remind-bindings-specific-mode
+                 (remind-bindings-specific))
+               (popwin:popup-buffer remind-bindings-buffername
+                                    :width 0.25 :position 'right
+                                    :noselect :stick))
+      ;; Otherwise initialise no more than twice
       (setq level (+ level 1))
       (if (> level 2)
           (message "Could not initialise")
-        (remind-bindings-initialise)
+        (if remind-bindings-specific-mode
+            (remind-bindings-specific)
+          (remind-bindings-initialise))
         (remind-bindings-togglebuffer)))))
 
 
