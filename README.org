@@ -10,6 +10,8 @@
  When the show-when-idle setting is true, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][omni-quotes.el]].
 
  Otherwise the bindings can be toggled in a popup sidebar.
+
+ To make the displayed list of bindings more specific to the buffer, a minor-mode =remind-bindings-specific-mode= can be enabled.
  
  #+HTML: <img src="https://user-images.githubusercontent.com/20641402/73578038-efebd680-447e-11ea-9ae1-4cb8c692afd9.gif" />
  
@@ -20,7 +22,8 @@
      (use-package remind-bindings
        :hook (after-init . remind-bindings-initialise)
        :custom (remind-bindings-initfile (expand-file-name "~/.emacs.d/init.el"))
-       :bind (("C-c C-d" . 'remind-bindings-toggle-buffer)))
+       :bind (("C-c C-d" . 'remind-bindings-toggle-buffer)   ;; toggle buffer
+              ("C-c M-d" . 'remind-bindings-specific-mode))) ;; buffer-specific only
    #+end_src
 
 ** Customization
