@@ -6,7 +6,7 @@
 ;; URL: https://github.com/mtekman/remind-bindings.el
 ;; Keywords: outlines
 ;; Package-Requires: ((emacs "25.1"))
-;; Version: 0.2
+;; Version: 0.6
 
 ;;; Commentary:
 
