@@ -256,7 +256,7 @@
         (remind-bindings-doitall intbinds))
     (message "Please set ‘remind-bindings-initfile’ first")))
 
-(defun remind-bindings-doitall (bindings)
+(defun remind-bindings-doitall (intbinds)
   "Take an alist of BINDINGS and set the omniquotes and sidebuffer."
   (let ((make-quotes (remind-bindings-omniquotes-make intbinds))
         (make-sidebf (remind-bindings-sidebuffer-make intbinds)))
@@ -311,9 +311,9 @@
   (let ((fn1 '(lambda (x) (symbol-name (car x))))
         (fn2 '(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
-           (sansmode (mapcar fn2 actsmode))
-           (sortmode (cl-sort sansmode 'string-lessp))) ;; eh, why not.
-      (map-filter (lambda (k v) (member k sortmode)) alistmap))))
+           (sansmode (mapcar fn2 actsmode)))
+           ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
+      (map-filter (lambda (k v) (member k sansmode)) alistmap))))
 
 (defun remind-bindings-specific ()
   "Grab the modes for the current buffer."
