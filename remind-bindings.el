@@ -307,12 +307,6 @@
 (defvar remind-bindings-specific-buffermap nil
   "Buffer Map of bindings.")
 
-(defcustom remind-bindings-enable-bufferspecific t
-  "Enable showing buffer-specific bindings only."
-  :type 'boolean
-  :group 'remind-bindings)
-
-
 (defun remind-bindings-specific-activefiltered (alistmap)
   "Get a list of packages with modes active in buffer, and match them to ALISTMAP of packages."
   (let ((fn1 #'(lambda (x) (symbol-name (car x))))
