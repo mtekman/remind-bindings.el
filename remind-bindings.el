@@ -47,7 +47,7 @@
   :group 'remind-bindings)
 
 (defcustom remind-bindings--format-bincom " → "
-  "The format for displaying the binding (first %s) and the command (last %s)."
+  "The format for displaying the binding (car %s) and the command (last %s)."
   :type 'string
   :group 'remind-bindings-format)
 
@@ -55,7 +55,7 @@
   "Internal format for putting together binding to command.")
 
 (defcustom remind-bindings--format-packbincom "[%s] %s"
-  "The format for displaying the package (first %s) and the bindings (last %s)."
+  "The format for displaying the package (car %s) and the bindings (last %s)."
   :type 'string
   :group 'remind-bindings-format)
 
@@ -75,7 +75,7 @@
             (while t
                 (let ((glob (remind-bindings-globalsetkey-next)))
                   (when glob
-                    (let ((pname (string-trim (first glob)))
+                    (let ((pname (string-trim (car glob)))
                           (binde (car (last glob))))
                       (push `(,pname ,binde) globbers))))
               (end-of-line))
