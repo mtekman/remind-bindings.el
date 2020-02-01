@@ -21,6 +21,9 @@
 (require 'subr-x)
 (require 'omni-quotes)
 (require 'popwin)
+(require 'map)
+(require 'paren)
+(require 'org)
 
 ;; Package-Requires: (omni-quotes "20170425.1832") (popwin "20200122.1440")
 ;;  -- throws error as not installable...
