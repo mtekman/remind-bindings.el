@@ -253,11 +253,15 @@
   "Collect all ‘use-package’ and global key bindings and set the omni-quotes list."
   (if remind-bindings-initfile
       (let ((intbinds (remind-bindings-aggregatelists)))
-        (let ((make-quotes (remind-bindings-omniquotes-make intbinds))
-              (make-sidebf (remind-bindings-sidebuffer-make intbinds)))
-          (ignore make-sidebf) ;; it just aligns nicely in the let part...
-          (omni-quotes-set-populate make-quotes "bindings")))
+        (remind-bindings-doitall intbinds))
     (message "Please set ‘remind-bindings-initfile’ first")))
+
+(defun remind-bindings-doitall (bindings)
+  "Take an alist of BINDINGS and set the omniquotes and sidebuffer."
+  (let ((make-quotes (remind-bindings-omniquotes-make intbinds))
+        (make-sidebf (remind-bindings-sidebuffer-make intbinds)))
+    (ignore make-sidebf) ;; it just aligns nicely in the let part...
+    (omni-quotes-set-populate make-quotes "bindings")))
 
 (defun remind-bindings-togglebuffer-isopen ()
   "Check if the sidebuffer is open."
