@@ -38,8 +38,8 @@
  All text separators and decoration can be customised by modifying:
 
  #+begin_src elisp
-   (setq remind-bindings--format-packbincom "[%s] %s")
-   (setq remind-bindings--format-bincom "%s → %s")
-   (setq remind-bindings--format-bindingsep " | ")
+   (setq remind-bindings-format-packbincom "[%s] %s")
+   (setq remind-bindings-format-bincom "%s → %s")
+   (setq remind-bindings-format-bindingsep " | ")
  #+end_src
 
