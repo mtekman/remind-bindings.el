@@ -7,9 +7,9 @@
 
  This package parses your Emacs init file for =use-package= or =global-set-key= calls and summarises the bindings it detects on a package-by-package basis.
 
- When the show-when-idle setting is true, a message is printed in the minibuffer utilising the same framework as [[https://github.com/AdrieanKhisbe/omni-quotes.el][omni-quotes.el]].
+ This is different from [[https://github.com/danil/ido-describe-bindings][ido-describe-bindings]] and [[https://github.com/fgallina/region-bindings-mode][region-bindings-mode]] in the sense that the former parses all bindings without much context to what the user has set themselves, and the latter is more a tool for switching bindings in certain contexts.
 
- Otherwise the bindings can be toggled in a popup sidebar.
+ The package provides a toggleable side-buffer showing all relevant bindings, and it also makes use of [[https://github.com/AdrieanKhisbe/omni-quotes.el][omni-quotes.el]], such that when =omni-quotes-mode= is enabled, a random binding is shown in the minibuffer when the user idle.
 
  To make the displayed list of bindings more specific to the buffer, a minor-mode =remind-bindings-specific-mode= can be enabled.
  
