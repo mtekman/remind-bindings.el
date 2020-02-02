@@ -201,7 +201,7 @@
   "Aggregate the `use-package` and `global-set-key` bindings and merge them by package."
   (let ((globals (remind-bindings-globalsetkey))
         (usepack (remind-bindings-usepackages)))
-    (map-merge-with 'hash-table 'append globals usepack)))
+    (map-merge-with 'hash-table #'append globals usepack)))
 
 (defun remind-bindings-omniquotes-make (hashtable)
   "Convert a HASHTABLE of bindings into a single formatted list."
@@ -214,7 +214,7 @@
      (lambda (packname bindings)
        (let* ((replacefn `(lambda (x) (s-replace ,bcomint ,bcom x)))
               (newbsep (mapcar replacefn bindings))
-              (reform (mapconcat 'identity newbsep bsep))
+              (reform (mapconcat #'identity newbsep bsep))
               ;; [packname] bindings
               (fmt (format pbin packname reform)))
          (push fmt total)))
@@ -274,7 +274,7 @@
   "Check if the buffer exists."
   (let ((bname remind-bindings-buffername)
         (blist (buffer-list)))
-    (member bname (mapcar 'buffer-name blist))))
+    (member bname (mapcar #'buffer-name blist))))
 
 ;;;###autoload
 (defun remind-bindings-togglebuffer (&optional level)
