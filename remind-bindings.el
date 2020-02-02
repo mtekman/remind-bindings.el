@@ -25,9 +25,6 @@
 (require 'paren)
 (require 'org)
 
-;; Package-Requires: (omni-quotes "20170425.1832") (popwin "20200122.1440")
-;;  -- throws error as not installable...
-
 (defgroup remind-bindings nil
   "Group for remembering bindings."
   :group 'emacs)
