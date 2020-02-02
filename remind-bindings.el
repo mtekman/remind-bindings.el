@@ -300,7 +300,7 @@
         (remind-bindings-togglebuffer)))))
 
 
-;; -- Methods to guess the modes in the current buffer -- 
+;; -- Methods to guess the modes in the current buffer --
 (defvar remind-bindings-specific-buffermap nil
   "Buffer Map of bindings.")
 
