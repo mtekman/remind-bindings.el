@@ -43,20 +43,20 @@
   :type 'string
   :group 'remind-bindings)
 
-(defcustom remind-bindings--format-bincom " → "
+(defcustom remind-bindings-format-bincom " → "
   "The format for displaying the binding (car %s) and the command (last %s)."
   :type 'string
   :group 'remind-bindings-format)
 
-(defconst remind-bindings--format-bincom-internal " &&& "
+(defconst remind-bindings-format-bincom-internal " &&& "
   "Internal format for putting together binding to command.")
 
-(defcustom remind-bindings--format-packbincom "[%s] %s"
+(defcustom remind-bindings-format-packbincom "[%s] %s"
   "The format for displaying the package (car %s) and the bindings (last %s)."
   :type 'string
   :group 'remind-bindings-format)
 
-(defcustom remind-bindings--format-bindingsep " | "
+(defcustom remind-bindings-format-bindingsep " | "
   "The separator between the bindings of the same package."
   :type 'string
   :group 'remind-bindings-format)
@@ -93,7 +93,7 @@
   (let ((bsub #'buffer-substring-no-properties)
         (getfn #'remind-bindings-globalsetkey-fromfunc)
         (initfile remind-bindings-initfile)
-        (bincomint remind-bindings--format-bincom-internal))
+        (bincomint remind-bindings-format-bincom-internal))
     (let* ((bound (funcall show-paren-data-function))
            (outer (nth 3 bound)))
     (search-forward "global-set-key " outer)
@@ -191,7 +191,7 @@
                 (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
                        (comm (car (cdr bin-comm)))
                        (psnickle (concat bin
-                                         remind-bindings--format-bincom-internal
+                                         remind-bindings-format-bincom-internal
                                          comm)))
                   (push psnickle bindlist)))))
           (nreverse bindlist))))))
@@ -205,10 +205,10 @@
 
 (defun remind-bindings-omniquotes-make (hashtable)
   "Convert a HASHTABLE of bindings into a single formatted list."
-  (let ((bcomint remind-bindings--format-bincom-internal)
-        (bcom remind-bindings--format-bincom)
-        (bsep remind-bindings--format-bindingsep)
-        (pbin remind-bindings--format-packbincom)
+  (let ((bcomint remind-bindings-format-bincom-internal)
+        (bcom remind-bindings-format-bincom)
+        (bsep remind-bindings-format-bindingsep)
+        (pbin remind-bindings-format-packbincom)
         (total))
     (maphash
      (lambda (packname bindings)
@@ -224,7 +224,7 @@
 (defun remind-bindings-sidebuffer-make (hashtable)
   "Populate a sidebuffer with a HASHTABLE of bindings."
   (let* ((buff (get-buffer-create remind-bindings-buffername))
-         (prevsep remind-bindings--format-bincom-internal)
+         (prevsep remind-bindings-format-bincom-internal)
          (replacefn `(lambda (x) (s-replace ,prevsep " :: "  x))))
     (with-current-buffer buff
       (read-only-mode 0)
