@@ -69,11 +69,11 @@
       (let ((globbers nil))
         (condition-case err
             (while t
-                (let ((glob (remind-bindings-globalsetkey-next)))
-                  (when glob
-                    (let ((pname (string-trim (car glob)))
-                          (binde (car (last glob))))
-                      (push `(,pname ,binde) globbers))))
+              (let ((glob (remind-bindings-globalsetkey-next)))
+                (when glob
+                  (let ((pname (string-trim (car glob)))
+                        (binde (car (last glob))))
+                    (push `(,pname ,binde) globbers))))
               (end-of-line))
           (error
            (ignore err)
@@ -95,39 +95,39 @@
         (bincomint remind-bindings-format-bincom-internal))
     (let* ((bound (funcall show-paren-data-function))
            (outer (nth 3 bound)))
-    (search-forward "global-set-key " outer)
-    (let* ((bounk (funcall show-paren-data-function))
-           (keybf (nth 0 bounk))
-           (keybl (nth 3 bounk))
-           (keyb (apply bsub `(,keybf ,keybl))))
-      (when (search-forward "kbd \"" keybl t)
-        (let ((beg (point))
-              (end (- (search-forward "\"" keybl) 1)))
-          (setq keyb (apply bsub `(,beg ,end)))))
-      ;; Try to grab the command, quote or interactive
-      (condition-case nofuncstart
-          (progn (unless (search-forward "(interactive) " outer t)
-                   (unless (search-forward "'" outer t)
-                     (unless (search-forward "(" outer t))))
-                 (let ((ninner (point))
-                       (nouter (- outer 1)))
-                   (let* ((func (apply bsub `(,ninner ,nouter)))
-                          (package-name (apply getfn `(,func ,initfile))))
-                     (end-of-line)
-                     (let ((bname (concat keyb bincomint func)))
-                       `(,package-name ,bname)))))
-        (error
-         ;; Move to end of line and give nil
-         (ignore nofuncstart)
-         (end-of-line)))))))
+      (search-forward "global-set-key " outer)
+      (let* ((bounk (funcall show-paren-data-function))
+             (keybf (nth 0 bounk))
+             (keybl (nth 3 bounk))
+             (keyb (apply bsub `(,keybf ,keybl))))
+        (when (search-forward "kbd \"" keybl t)
+          (let ((beg (point))
+                (end (- (search-forward "\"" keybl) 1)))
+            (setq keyb (apply bsub `(,beg ,end)))))
+        ;; Try to grab the command, quote or interactive
+        (condition-case nofuncstart
+            (progn (unless (search-forward "(interactive) " outer t)
+                     (unless (search-forward "'" outer t)
+                       (unless (search-forward "(" outer t))))
+                   (let ((ninner (point))
+                         (nouter (- outer 1)))
+                     (let* ((func (apply bsub `(,ninner ,nouter)))
+                            (package-name (apply getfn `(,func ,initfile))))
+                       (end-of-line)
+                       (let ((bname (concat keyb bincomint func)))
+                         `(,package-name ,bname)))))
+          (error
+           ;; Move to end of line and give nil
+           (ignore nofuncstart)
+           (end-of-line)))))))
 
 (defun remind-bindings-globalsetkey-fromfunc (fname default)
   "Get the name of the package the FNAME belongs to.  Return the DEFAULT if none found."
   (let ((packname (symbol-file (intern fname))))
     (if packname
-      (let* ((bnamext (car (last (split-string packname "/")))))
-        ;; name without extension
-        (car (split-string bnamext "\\.")))
+        (let* ((bnamext (car (last (split-string packname "/")))))
+          ;; name without extension
+          (car (split-string bnamext "\\.")))
       default)))
 
 ;; --- usepackages --- funcs
@@ -310,7 +310,7 @@
         (fn2 #'(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
            (sansmode (mapcar fn2 actsmode)))
-           ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
+      ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
       (map-filter (lambda (k v) (ignore v)(member k sansmode)) alistmap))))
 
 (defun remind-bindings-specific ()
