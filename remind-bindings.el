@@ -23,7 +23,6 @@
 (require 'popwin)
 (require 'map)
 (require 'paren)
-(require 'org)
 
 (defgroup remind-bindings nil
   "Group for remembering bindings."
@@ -223,6 +222,7 @@
 
 (defun remind-bindings-sidebuffer-make (hashtable)
   "Populate a sidebuffer with a HASHTABLE of bindings."
+  (require 'org)
   (let* ((buff (get-buffer-create remind-bindings-buffername))
          (prevsep remind-bindings-format-bincom-internal)
          (replacefn `(lambda (x) (s-replace ,prevsep " :: "  x))))
