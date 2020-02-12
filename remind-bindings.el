@@ -5,8 +5,8 @@
 ;; Author: Mehmet Tekman
 ;; URL: https://github.com/mtekman/remind-bindings.el
 ;; Keywords: outlines
-;; Package-Requires: ((emacs "25.1"))
-;; Version: 0.6
+;; Package-Requires: ((emacs "25.1") (omni-quotes "0.5") (popwin "1.0"))
+;; Version: 0.7
 
 ;;; Commentary:
 
@@ -23,22 +23,21 @@
 (require 'popwin)
 (require 'map)
 (require 'paren)
-(require 'org)
 
 (defgroup remind-bindings nil
   "Group for remembering bindings."
-  :group 'emacs)
+  :group 'convenience)
 
 (defgroup remind-bindings-format nil
   "Group for formatting how the reminders are displayed"
   :group 'remind-bindings)
 
-(defcustom remind-bindings-initfile nil
+(defcustom remind-bindings-initfile (locate-user-emacs-file "init.el")
   "The Emacs init file with your bindings in it."
   :type 'string
   :group 'remind-bindings)
 
-(defcustom remind-bindings-buffername "*bindings.org*"
+(defcustom remind-bindings-buffername "*remind-bindings*"
   "Name of the buffer to render bindings."
   :type 'string
   :group 'remind-bindings)
@@ -70,11 +69,11 @@
       (let ((globbers nil))
         (condition-case err
             (while t
-                (let ((glob (remind-bindings-globalsetkey-next)))
-                  (when glob
-                    (let ((pname (string-trim (car glob)))
-                          (binde (car (last glob))))
-                      (push `(,pname ,binde) globbers))))
+              (let ((glob (remind-bindings-globalsetkey-next)))
+                (when glob
+                  (let ((pname (string-trim (car glob)))
+                        (binde (car (last glob))))
+                    (push `(,pname ,binde) globbers))))
               (end-of-line))
           (error
            (ignore err)
@@ -96,39 +95,39 @@
         (bincomint remind-bindings-format-bincom-internal))
     (let* ((bound (funcall show-paren-data-function))
            (outer (nth 3 bound)))
-    (search-forward "global-set-key " outer)
-    (let* ((bounk (funcall show-paren-data-function))
-           (keybf (nth 0 bounk))
-           (keybl (nth 3 bounk))
-           (keyb (apply bsub `(,keybf ,keybl))))
-      (when (search-forward "kbd \"" keybl t)
-        (let ((beg (point))
-              (end (- (search-forward "\"" keybl) 1)))
-          (setq keyb (apply bsub `(,beg ,end)))))
-      ;; Try to grab the command, quote or interactive
-      (condition-case nofuncstart
-          (progn (unless (search-forward "(interactive) " outer t)
-                   (unless (search-forward "'" outer t)
-                     (unless (search-forward "(" outer t))))
-                 (let ((ninner (point))
-                       (nouter (- outer 1)))
-                   (let* ((func (apply bsub `(,ninner ,nouter)))
-                          (package-name (apply getfn `(,func ,initfile))))
-                     (end-of-line)
-                     (let ((bname (concat keyb bincomint func)))
-                       `(,package-name ,bname)))))
-        (error
-         ;; Move to end of line and give nil
-         (ignore nofuncstart)
-         (end-of-line)))))))
+      (search-forward "global-set-key " outer)
+      (let* ((bounk (funcall show-paren-data-function))
+             (keybf (nth 0 bounk))
+             (keybl (nth 3 bounk))
+             (keyb (apply bsub `(,keybf ,keybl))))
+        (when (search-forward "kbd \"" keybl t)
+          (let ((beg (point))
+                (end (- (search-forward "\"" keybl) 1)))
+            (setq keyb (apply bsub `(,beg ,end)))))
+        ;; Try to grab the command, quote or interactive
+        (condition-case nofuncstart
+            (progn (unless (search-forward "(interactive) " outer t)
+                     (unless (search-forward "'" outer t)
+                       (unless (search-forward "(" outer t))))
+                   (let ((ninner (point))
+                         (nouter (- outer 1)))
+                     (let* ((func (apply bsub `(,ninner ,nouter)))
+                            (package-name (apply getfn `(,func ,initfile))))
+                       (end-of-line)
+                       (let ((bname (concat keyb bincomint func)))
+                         `(,package-name ,bname)))))
+          (error
+           ;; Move to end of line and give nil
+           (ignore nofuncstart)
+           (end-of-line)))))))
 
 (defun remind-bindings-globalsetkey-fromfunc (fname default)
   "Get the name of the package the FNAME belongs to.  Return the DEFAULT if none found."
   (let ((packname (symbol-file (intern fname))))
     (if packname
-      (let* ((bnamext (car (last (split-string packname "/")))))
-        ;; name without extension
-        (car (split-string bnamext "\\.")))
+        (let* ((bnamext (car (last (split-string packname "/")))))
+          ;; name without extension
+          (car (split-string bnamext "\\.")))
       default)))
 
 ;; --- usepackages --- funcs
@@ -223,6 +222,7 @@
 
 (defun remind-bindings-sidebuffer-make (hashtable)
   "Populate a sidebuffer with a HASHTABLE of bindings."
+  (require 'org)
   (let* ((buff (get-buffer-create remind-bindings-buffername))
          (prevsep remind-bindings-format-bincom-internal)
          (replacefn `(lambda (x) (s-replace ,prevsep " :: "  x))))
@@ -310,7 +310,7 @@
         (fn2 #'(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
            (sansmode (mapcar fn2 actsmode)))
-           ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
+      ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
       (map-filter (lambda (k v) (ignore v)(member k sansmode)) alistmap))))
 
 (defun remind-bindings-specific ()
