@@ -38,7 +38,7 @@
   :type 'string
   :group 'remind-bindings)
 
-(defcustom remind-bindings-buffername "*bindings.org*"
+(defcustom remind-bindings-buffername "*remind-bindings*"
   "Name of the buffer to render bindings."
   :type 'string
   :group 'remind-bindings)
