@@ -27,7 +27,7 @@
 
 (defgroup remind-bindings nil
   "Group for remembering bindings."
-  :group 'emacs)
+  :group 'convenience)
 
 (defgroup remind-bindings-format nil
   "Group for formatting how the reminders are displayed"
