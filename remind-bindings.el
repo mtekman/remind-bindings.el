@@ -72,6 +72,22 @@
   :type 'string
   :group 'remind-bindings-format)
 
+(define-minor-mode remind-bindings-specific-mode
+  "Allow remind-bindings to show buffer specific bindings only"
+  nil
+  " ¶"
+  nil
+  (if remind-bindings-specific-mode
+      (progn (message "Buffer Specific Bindings Only")
+             (remind-bindings-specific)
+             (add-hook 'window-selection-change-functions
+                       #'remind-bindings-specific nil t))
+    ;; re-initialise full bindings again
+    (remind-bindings-initialise)
+    (remove-hook 'window-selection-change-functions
+                 #'remind-bindings-specific t)))
+
+
 ;; --- global-set-key --- funcs
 (defun remind-bindings-globalsetkey ()
   "Process entire Emacs init.el for global bindings and build an alist map grouped on package name."
@@ -339,21 +355,6 @@
           (setq remind-bindings-specific-buffermap
                 (map-insert damap bfnam buffbinds))))
       (remind-bindings-doitall binds))))
-
-(define-minor-mode remind-bindings-specific-mode
-  "Allow remind-bindings to show buffer specific bindings only"
-  nil
-  " ¶"
-  nil
-  (if remind-bindings-specific-mode
-      (progn (message "Buffer Specific Bindings Only")
-             (remind-bindings-specific)
-             (add-hook 'window-selection-change-functions
-                       #'remind-bindings-specific nil t))
-    ;; re-initialise full bindings again
-    (remind-bindings-initialise)
-    (remove-hook 'window-selection-change-functions
-                 #'remind-bindings-specific t)))
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
