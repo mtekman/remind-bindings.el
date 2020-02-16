@@ -8,6 +8,18 @@
 ;; Package-Requires: ((emacs "25.1") (omni-quotes "0.5") (popwin "1.0"))
 ;; Version: 0.7
 
+;;; License:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
 ;;; Commentary:
 
 ;; This package parses your Emacs init file for use-package or
