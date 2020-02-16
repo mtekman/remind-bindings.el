@@ -334,8 +334,8 @@
 
 (defun remind-bindings-specific-activefiltered (alistmap)
   "Get a list of packages with modes active in buffer, and match them to ALISTMAP of packages."
-  (let ((fn1 #'(lambda (x) (symbol-name (car x))))
-        (fn2 #'(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
+  (let ((fn1 (lambda (x) (symbol-name (car x))))
+        (fn2 (lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
            (sansmode (mapcar fn2 actsmode)))
       ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
