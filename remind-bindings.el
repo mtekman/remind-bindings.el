@@ -5,8 +5,20 @@
 ;; Author: Mehmet Tekman
 ;; URL: https://github.com/mtekman/remind-bindings.el
 ;; Keywords: outlines
-;; Package-Requires: ((emacs "25.1") (omni-quotes "0.5") (popwin "1.0"))
+;; Package-Requires: ((emacs "25.1") (omni-quotes "0.5") (popwin "1.0") (map "2.0"))
 ;; Version: 0.7
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;;; Commentary:
 
@@ -59,6 +71,22 @@
   "The separator between the bindings of the same package."
   :type 'string
   :group 'remind-bindings-format)
+
+(define-minor-mode remind-bindings-specific-mode
+  "Allow remind-bindings to show buffer specific bindings only"
+  nil
+  " ¶"
+  nil
+  (if remind-bindings-specific-mode
+      (progn (message "Buffer Specific Bindings Only")
+             (remind-bindings-specific)
+             (add-hook 'window-selection-change-functions
+                       #'remind-bindings-specific nil t))
+    ;; re-initialise full bindings again
+    (remind-bindings-initialise)
+    (remove-hook 'window-selection-change-functions
+                 #'remind-bindings-specific t)))
+
 
 ;; --- global-set-key --- funcs
 (defun remind-bindings-globalsetkey ()
@@ -306,8 +334,8 @@
 
 (defun remind-bindings-specific-activefiltered (alistmap)
   "Get a list of packages with modes active in buffer, and match them to ALISTMAP of packages."
-  (let ((fn1 #'(lambda (x) (symbol-name (car x))))
-        (fn2 #'(lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
+  (let ((fn1 (lambda (x) (symbol-name (car x))))
+        (fn2 (lambda (x) (s-replace-regexp "\\(-minor\\)?-mode$" "" x))))
     (let* ((actsmode (mapcar fn1 minor-mode-alist))
            (sansmode (mapcar fn2 actsmode)))
       ;;(sansmode (cl-sort sansmode 'string-lessp))) ;; debug, sort
@@ -327,21 +355,6 @@
           (setq remind-bindings-specific-buffermap
                 (map-insert damap bfnam buffbinds))))
       (remind-bindings-doitall binds))))
-
-(define-minor-mode remind-bindings-specific-mode
-  "Allow remind-bindings to show buffer specific bindings only"
-  nil
-  " ¶"
-  nil
-  (if remind-bindings-specific-mode
-      (progn (message "Buffer Specific Bindings Only")
-             (remind-bindings-specific)
-             (add-hook 'window-selection-change-functions
-                       #'remind-bindings-specific nil t))
-    ;; re-initialise full bindings again
-    (remind-bindings-initialise)
-    (remove-hook 'window-selection-change-functions
-                 #'remind-bindings-specific t)))
 
 (provide 'remind-bindings)
 ;;; remind-bindings.el ends here
