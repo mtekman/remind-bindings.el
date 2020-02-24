@@ -1,7 +1,7 @@
 #+TITLE: remind-bindings.el
 
 # NOTE: HTML for the GitHub renderer, courtesy of alphapapa for the template.
-#+HTML: <a href="https://melpa.org/#/remind-bindings"><img src="https://melpa.org/packages/remind-bindings-badge.svg"></a> <a href="https://stable.melpa.org/#/remind-bindings"><img src="https://stable.melpa.org/packages/remind-bindings-badge.svg"></a>
+#+HTML: <a href="https://melpa.org/#/remind-bindings"><img src="https://melpa.org/packages/remind-bindings-badge.svg"></a>
 
  It is sometimes hard to remember what bindings you have set without having to open up your =init= file and checking yourself.
 
@@ -21,7 +21,6 @@
    #+begin_src elisp
      (use-package remind-bindings
        :hook (after-init . remind-bindings-initialise)
-       :custom (remind-bindings-initfile (expand-file-name "~/.emacs.d/init.el"))
        :bind (("C-c C-d" . 'remind-bindings-toggle-buffer)   ;; toggle buffer
               ("C-c M-d" . 'remind-bindings-specific-mode))) ;; buffer-specific only
    #+end_src
