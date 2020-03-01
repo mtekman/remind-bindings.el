@@ -44,7 +44,7 @@
   "Group for formatting how the reminders are displayed"
   :group 'remind-bindings)
 
-(defcustom remind-bindings-initfile (locate-user-emacs-file "init.el")
+(defcustom remind-bindings-initfile (locate-user-emacs-file "init.el" ".emacs")
   "The Emacs init file with your bindings in it."
   :type 'string
   :group 'remind-bindings)
