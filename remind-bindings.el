@@ -74,9 +74,7 @@
 
 (define-minor-mode remind-bindings-specific-mode
   "Allow remind-bindings to show buffer specific bindings only"
-  nil
-  " ¶"
-  nil
+  :lighter " ¶"
   (if remind-bindings-specific-mode
       (progn (message "Buffer Specific Bindings Only")
              (remind-bindings-specific)
@@ -153,7 +151,7 @@
   "Get the name of the package the FNAME belongs to.  Return the DEFAULT if none found."
   (let ((packname (symbol-file (intern fname))))
     (if packname
-        (let* ((bnamext (car (last (split-string packname "/")))))
+        (let ((bnamext (car (last (split-string packname "/")))))
           ;; name without extension
           (car (split-string bnamext "\\.")))
       default)))
@@ -166,8 +164,8 @@
       (goto-char 0)
       (let ((packbinds nil)
             (stop nil))
-        (while (not stop)
-          (condition-case err
+        (condition-case _err
+            (while (not (eobp))
               (let ((packinfo (remind-bindings-usepackages-next)))
                 (when (nth 1 packinfo) ;; has bounds
                   (let ((binds (remind-bindings-usepackages-bindsinpackage
@@ -175,11 +173,8 @@
                     (message (car binds))
                     (when (nth 1 binds)
                       (push binds packbinds)))))
-            (error
-             ;; End of file
-             (ignore err)
-             (setq stop t)))
-          (end-of-line))
+              (end-of-line))
+          (search-failed nil))
         (map-into (nreverse packbinds) 'hash-table)))))
 
 (defun remind-bindings-usepackages-next ()
@@ -214,13 +209,13 @@
               (let* ((end (- (point) 1))
                      (sta (+ (search-backward "(") 1))
                      (juststr (buffer-substring-no-properties sta end))
-                     (bin-comm (split-string juststr " \\. ")))
-                (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
-                       (comm (car (cdr bin-comm)))
-                       (psnickle (concat bin
-                                         remind-bindings-format-bincom-internal
-                                         comm)))
-                  (push psnickle bindlist)))))
+                     (bin-comm (split-string juststr " \\. "))
+                     (bin  (nth 1 (split-string (car bin-comm) "\"")))
+                     (comm (car (cdr bin-comm)))
+                     (psnickle (concat bin
+                                       remind-bindings-format-bincom-internal
+                                       comm)))
+                (push psnickle bindlist))))
           (nreverse bindlist))))))
 
 ;; --- Main --
