@@ -209,13 +209,13 @@
               (let* ((end (- (point) 1))
                      (sta (+ (search-backward "(") 1))
                      (juststr (buffer-substring-no-properties sta end))
-                     (bin-comm (split-string juststr " \\. ")))
-                (let* ((bin  (nth 1 (split-string (car bin-comm) "\"")))
-                       (comm (car (cdr bin-comm)))
-                       (psnickle (concat bin
-                                         remind-bindings-format-bincom-internal
-                                         comm)))
-                  (push psnickle bindlist)))))
+                     (bin-comm (split-string juststr " \\. "))
+                     (bin  (nth 1 (split-string (car bin-comm) "\"")))
+                     (comm (car (cdr bin-comm)))
+                     (psnickle (concat bin
+                                       remind-bindings-format-bincom-internal
+                                       comm)))
+                (push psnickle bindlist))))
           (nreverse bindlist))))))
 
 ;; --- Main --
