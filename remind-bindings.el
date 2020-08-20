@@ -151,7 +151,7 @@
   "Get the name of the package the FNAME belongs to.  Return the DEFAULT if none found."
   (let ((packname (symbol-file (intern fname))))
     (if packname
-        (let* ((bnamext (car (last (split-string packname "/")))))
+        (let ((bnamext (car (last (split-string packname "/")))))
           ;; name without extension
           (car (split-string bnamext "\\.")))
       default)))
