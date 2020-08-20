@@ -164,8 +164,8 @@
       (goto-char 0)
       (let ((packbinds nil)
             (stop nil))
-        (while (not stop)
-          (condition-case err
+        (condition-case _err
+            (while (not (eobp))
               (let ((packinfo (remind-bindings-usepackages-next)))
                 (when (nth 1 packinfo) ;; has bounds
                   (let ((binds (remind-bindings-usepackages-bindsinpackage
@@ -173,11 +173,8 @@
                     (message (car binds))
                     (when (nth 1 binds)
                       (push binds packbinds)))))
-            (error
-             ;; End of file
-             (ignore err)
-             (setq stop t)))
-          (end-of-line))
+              (end-of-line))
+          (search-failed nil))
         (map-into (nreverse packbinds) 'hash-table)))))
 
 (defun remind-bindings-usepackages-next ()
