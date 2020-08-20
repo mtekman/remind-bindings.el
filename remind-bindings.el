@@ -74,9 +74,7 @@
 
 (define-minor-mode remind-bindings-specific-mode
   "Allow remind-bindings to show buffer specific bindings only"
-  nil
-  " ¶"
-  nil
+  :lighter " ¶"
   (if remind-bindings-specific-mode
       (progn (message "Buffer Specific Bindings Only")
              (remind-bindings-specific)
