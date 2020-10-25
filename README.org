@@ -1,7 +1,7 @@
 #+TITLE: remind-bindings.el
 
 *** This repo has migrated to GitLab
-https://gitlab.com/mtekman/
+https://gitlab.com/mtekman/remind-bindings.el
 ****** (The copy here is archived. Please see the above link for the latest developments)
 
 #+HTML: <hr/>
