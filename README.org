@@ -1,5 +1,13 @@
 #+TITLE: remind-bindings.el
 
+*** This repo has migrated to GitLab
+https://gitlab.com/mtekman/
+****** (The copy here is archived. Please see the above link for the latest developments)
+
+#+HTML: <hr/>
+
+
+
 # NOTE: HTML for the GitHub renderer, courtesy of alphapapa for the template.
 #+HTML: <a href="https://melpa.org/#/remind-bindings"><img src="https://melpa.org/packages/remind-bindings-badge.svg"></a>
 
